@@ -716,7 +716,7 @@ namespace Microsoft.Data.Entity.Query.Expressions
 
         // TODO: Use generator from DI
         public override string ToString()
-            => new DefaultQuerySqlGenerator(this, new NullTypeMapper())
+            => new DefaultQuerySqlGenerator(new ParameterNameGeneratorFactory())
                 .GenerateSql(new Dictionary<string, object>()).CommandText;
 
         private class NullTypeMapper : IRelationalTypeMapper

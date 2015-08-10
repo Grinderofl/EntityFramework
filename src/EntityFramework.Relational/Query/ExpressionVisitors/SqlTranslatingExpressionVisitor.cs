@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Query.Expressions;
+using Microsoft.Data.Entity.Query.ExpressionTranslators;
 using Microsoft.Data.Entity.Utilities;
 using Remotion.Linq.Clauses;
 using Remotion.Linq.Clauses.Expressions;
@@ -19,14 +20,36 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
 {
     public class SqlTranslatingExpressionVisitor : ThrowingExpressionVisitor
     {
-        private readonly RelationalQueryModelVisitor _queryModelVisitor;
-        private readonly SelectExpression _targetSelectExpression;
-        private readonly Expression _topLevelPredicate;
+        private readonly IRelationalMetadataExtensionProvider _relationalMetadataExtensionProvider;
+        private readonly IExpressionFragmentTranslator _compositeExpressionFragmentTranslator;
+        private readonly IMethodCallTranslator _methodCallTranslator;
+        private readonly IMemberTranslator _memberTranslator;
 
-        private readonly bool _bindParentQueries;
-        private readonly bool _inProjection;
+        private RelationalQueryModelVisitor _queryModelVisitor;
+        private SelectExpression _targetSelectExpression;
+        private Expression _topLevelPredicate;
+
+        private bool _bindParentQueries;
+        private bool _inProjection;
 
         public SqlTranslatingExpressionVisitor(
+            [NotNull] IRelationalMetadataExtensionProvider relationalMetadataExtensionProvider,
+            [NotNull] IExpressionFragmentTranslator compositeExpressionFragmentTranslator,
+            [NotNull] IMethodCallTranslator methodCallTranslator,
+            [NotNull] IMemberTranslator memberTranslator)
+        {
+            Check.NotNull(relationalMetadataExtensionProvider, nameof(relationalMetadataExtensionProvider));
+            Check.NotNull(compositeExpressionFragmentTranslator, nameof(compositeExpressionFragmentTranslator));
+            Check.NotNull(methodCallTranslator, nameof(methodCallTranslator));
+            Check.NotNull(memberTranslator, nameof(memberTranslator));
+
+            _relationalMetadataExtensionProvider = relationalMetadataExtensionProvider;
+            _compositeExpressionFragmentTranslator = compositeExpressionFragmentTranslator;
+            _methodCallTranslator = methodCallTranslator;
+            _memberTranslator = memberTranslator;
+        }
+
+        public virtual void Initialize(
             [NotNull] RelationalQueryModelVisitor queryModelVisitor,
             [CanBeNull] SelectExpression targetSelectExpression = null,
             [CanBeNull] Expression topLevelPredicate = null,
@@ -46,11 +69,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
 
         public override Expression Visit(Expression expression)
         {
-            var translatedExpression
-                = _queryModelVisitor
-                    .QueryCompilationContext
-                    .CompositeExpressionFragmentTranslator
-                    .Translate(expression);
+            var translatedExpression = _compositeExpressionFragmentTranslator.Translate(expression);
 
             if (translatedExpression != null && translatedExpression != expression)
             {
@@ -286,8 +305,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                             : Expression.Call(methodCallExpression.Method, arguments);
 
                     var translatedExpression =
-                        _queryModelVisitor.QueryCompilationContext.CompositeMethodCallTranslator
-                            .Translate(boundExpression);
+                        _methodCallTranslator.Translate(boundExpression);
 
                     if (translatedExpression != null)
                     {
@@ -328,9 +346,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                             ? Expression.Property(newExpression, memberExpression.Member.Name)
                             : memberExpression;
 
-                    var translatedExpression
-                        = _queryModelVisitor.QueryCompilationContext.CompositeMemberTranslator
-                            .Translate(newMemberExpression);
+                    var translatedExpression = _memberTranslator.Translate(newMemberExpression);
 
                     if (translatedExpression != null)
                     {
@@ -381,7 +397,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                 && selectExpression != _targetSelectExpression)
             {
                 selectExpression?.AddToProjection(
-                    _queryModelVisitor.QueryCompilationContext.RelationalExtensions.For(property).ColumnName,
+                    _relationalMetadataExtensionProvider.For(property).ColumnName,
                     property,
                     querySource);
 
@@ -395,7 +411,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
             IProperty property, IQuerySource querySource, SelectExpression selectExpression)
             => new AliasExpression(
                 new ColumnExpression(
-                    _queryModelVisitor.QueryCompilationContext.RelationalExtensions.For(property).ColumnName,
+                    _relationalMetadataExtensionProvider.For(property).ColumnName,
                     property,
                     selectExpression.GetTableForQuerySource(querySource)));
 

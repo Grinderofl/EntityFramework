@@ -138,8 +138,15 @@ namespace Microsoft.Data.Entity.SqlServer.FunctionalTests
         {
             var selectExpression = new SelectExpression();
 
-            return new CommandBuilder(
-                () => new DefaultQuerySqlGenerator(selectExpression, new SqlServerTypeMapper()), new UntypedRelationalValueBufferFactoryFactory());
+            var commandBuilder = new CommandBuilder(
+                new UntypedRelationalValueBufferFactoryFactory(),
+                new SqlServerTypeMapper(),
+                () => new DefaultQuerySqlGenerator(new ParameterNameGeneratorFactory())
+                {
+                    SelectExpression = selectExpression
+                });
+
+            return commandBuilder;
         }
 
         [Fact]
