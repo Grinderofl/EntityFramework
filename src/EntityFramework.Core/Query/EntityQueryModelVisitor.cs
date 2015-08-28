@@ -126,6 +126,8 @@ namespace Microsoft.Data.Entity.Query
 
         public virtual QueryCompilationContext QueryCompilationContext => _queryCompilationContext;
 
+        public virtual ILinqOperatorProvider LinqOperatorProvider => QueryCompilationContext.LinqOperatorProvider;
+
         public virtual StreamedSequenceInfo StreamedSequenceInfo => _streamedSequenceInfo;
 
         public virtual Func<QueryContext, IEnumerable<TResult>> CreateQueryExecutor<TResult>([NotNull] QueryModel queryModel)
@@ -192,7 +194,7 @@ namespace Microsoft.Data.Entity.Query
         {
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.InterceptExceptions
+                    LinqOperatorProvider.InterceptExceptions
                         .MakeGenericMethod(_expression.Type.GetSequenceType()),
                     Expression.Lambda(_expression),
                     QueryContextParameter);
@@ -228,7 +230,7 @@ namespace Microsoft.Data.Entity.Query
             {
                 _expression
                     = Expression.Call(
-                        QueryCompilationContext.LinqOperatorProvider.ToSequence
+                        LinqOperatorProvider.ToSequence
                             .MakeGenericMethod(_expression.Type),
                         _expression);
             }
@@ -418,7 +420,7 @@ namespace Microsoft.Data.Entity.Query
                         || resultItemTypeInfo.GetGenericTypeDefinition() == typeof(IAsyncGrouping<,>)))
                 {
                     trackingMethod
-                        = QueryCompilationContext.LinqOperatorProvider.TrackGroupedEntities
+                        = LinqOperatorProvider.TrackGroupedEntities
                             .MakeGenericMethod(
                                 resultItemType.GenericTypeArguments[0],
                                 resultItemType.GenericTypeArguments[1],
@@ -427,7 +429,7 @@ namespace Microsoft.Data.Entity.Query
                 else
                 {
                     trackingMethod
-                        = QueryCompilationContext.LinqOperatorProvider.TrackEntities
+                        = LinqOperatorProvider.TrackEntities
                             .MakeGenericMethod(
                                 resultItemType,
                                 queryModel.SelectClause.Selector.Type);
@@ -463,14 +465,14 @@ namespace Microsoft.Data.Entity.Query
         {
             return
                 (from entityTrackingInfo in entityTrackingInfos
-                 select
-                     (Func<TResult, object>)
-                         AccessorFindingExpressionVisitor
-                             .FindAccessorLambda(
-                                 entityTrackingInfo.QuerySourceReferenceExpression,
-                                 selector,
-                                 Expression.Parameter(typeof(TResult)))
-                             .Compile()
+                    select
+                        (Func<TResult, object>)
+                            AccessorFindingExpressionVisitor
+                                .FindAccessorLambda(
+                                    entityTrackingInfo.QuerySourceReferenceExpression,
+                                    selector,
+                                    Expression.Parameter(typeof(TResult)))
+                                .Compile()
                     )
                     .ToList();
         }
@@ -550,17 +552,17 @@ namespace Microsoft.Data.Entity.Query
 
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.SelectMany
+                    LinqOperatorProvider.SelectMany
                         .MakeGenericMethod(typeof(QueryResultScope), typeof(QueryResultScope)),
                     Expression.Call(
-                        QueryCompilationContext.LinqOperatorProvider.ToSequence
+                        LinqOperatorProvider.ToSequence
                             .MakeGenericMethod(typeof(QueryResultScope)),
                         QueryResultScopeParameter),
                     Expression.Lambda(_expression, QueryResultScopeParameter));
 
-            if (!QueryCompilationContext.QuerySourceMapping.ContainsMapping(fromClause))
+            if (!_queryCompilationContext.QuerySourceMapping.ContainsMapping(fromClause))
             {
-                QueryCompilationContext.QuerySourceMapping.AddMapping(
+                _queryCompilationContext.QuerySourceMapping.AddMapping(
                     fromClause,
                     QueryResultScope.GetResult(QueryResultScopeParameter, fromClause, elementType));
             }
@@ -604,14 +606,14 @@ namespace Microsoft.Data.Entity.Query
 
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.SelectMany
+                    LinqOperatorProvider.SelectMany
                         .MakeGenericMethod(typeof(QueryResultScope), typeof(QueryResultScope)),
                     _expression,
                     Expression.Lambda(innerExpression, QueryResultScopeParameter));
 
-            if (!QueryCompilationContext.QuerySourceMapping.ContainsMapping(fromClause))
+            if (!_queryCompilationContext.QuerySourceMapping.ContainsMapping(fromClause))
             {
-                QueryCompilationContext.QuerySourceMapping.AddMapping(
+                _queryCompilationContext.QuerySourceMapping.AddMapping(
                     fromClause,
                     QueryResultScope.GetResult(QueryResultScopeParameter, fromClause, innerElementType));
             }
@@ -650,7 +652,7 @@ namespace Microsoft.Data.Entity.Query
 
             Type innerElementType;
 
-            var querySourceMapping = QueryCompilationContext.QuerySourceMapping;
+            var querySourceMapping = _queryCompilationContext.QuerySourceMapping;
             if (innerElementScoped)
             {
                 innerElementType = innerSequenceType.GetTypeInfo().GenericTypeArguments[0];
@@ -671,7 +673,7 @@ namespace Microsoft.Data.Entity.Query
 
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.Join.MakeGenericMethod(
+                    LinqOperatorProvider.Join.MakeGenericMethod(
                         typeof(QueryResultScope),
                         innerSequenceType,
                         outerKeySelector.Type,
@@ -728,7 +730,7 @@ namespace Microsoft.Data.Entity.Query
 
             Type innerElementType;
 
-            var querySourceMapping = QueryCompilationContext.QuerySourceMapping;
+            var querySourceMapping = _queryCompilationContext.QuerySourceMapping;
             if (innerElementScoped)
             {
                 innerElementType = innerSequenceType.GetTypeInfo().GenericTypeArguments[0];
@@ -752,7 +754,7 @@ namespace Microsoft.Data.Entity.Query
 
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.GroupJoin.MakeGenericMethod(
+                    LinqOperatorProvider.GroupJoin.MakeGenericMethod(
                         typeof(QueryResultScope),
                         innerSequenceType,
                         outerKeySelector.Type,
@@ -767,7 +769,7 @@ namespace Microsoft.Data.Entity.Query
                                 groupJoinClause,
                                 innerElementScoped
                                     ? Expression.Call(
-                                        QueryCompilationContext.LinqOperatorProvider.Select
+                                        LinqOperatorProvider.Select
                                             .MakeGenericMethod(
                                                 innerSequenceType,
                                                 innerElementType),
@@ -814,7 +816,7 @@ namespace Microsoft.Data.Entity.Query
 
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.Where
+                    LinqOperatorProvider.Where
                         .MakeGenericMethod(typeof(QueryResultScope)),
                     _expression,
                     Expression.Lambda(predicate, QueryResultScopeParameter));
@@ -842,7 +844,7 @@ namespace Microsoft.Data.Entity.Query
                 parameterExpression
                     = Expression.Parameter(_streamedSequenceInfo.ResultItemType);
 
-                QueryCompilationContext.QuerySourceMapping
+                _queryCompilationContext.QuerySourceMapping
                     .ReplaceMapping(
                         queryModel.MainFromClause, parameterExpression);
 
@@ -861,8 +863,8 @@ namespace Microsoft.Data.Entity.Query
                 _expression
                     = Expression.Call(
                         (index == 0
-                            ? QueryCompilationContext.LinqOperatorProvider.OrderBy
-                            : QueryCompilationContext.LinqOperatorProvider.ThenBy)
+                            ? LinqOperatorProvider.OrderBy
+                            : LinqOperatorProvider.ThenBy)
                             .MakeGenericMethod(elementType, expression.Type),
                         _expression,
                         Expression.Lambda(expression, parameterExpression),
@@ -890,7 +892,7 @@ namespace Microsoft.Data.Entity.Query
 
             _expression
                 = Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.Select
+                    LinqOperatorProvider.Select
                         .MakeGenericMethod(typeof(QueryResultScope), selector.Type),
                     _expression,
                     Expression.Lambda(selector, QueryResultScopeParameter));
@@ -945,7 +947,7 @@ namespace Microsoft.Data.Entity.Query
 
             return
                 Expression.Call(
-                    QueryCompilationContext.LinqOperatorProvider.Select
+                    LinqOperatorProvider.Select
                         .MakeGenericMethod(elementType, typeof(QueryResultScope)),
                     expression,
                     Expression.Lambda(

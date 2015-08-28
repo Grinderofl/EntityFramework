@@ -144,13 +144,12 @@ namespace Microsoft.Framework.DependencyInjection
                 .AddScoped<ProjectionExpressionVisitorFactory>()
                 .AddScoped(p => GetProviderServices(p).QueryContextFactory)
                 .AddScoped(p => GetProviderServices(p).QueryCompilationContextFactory)
+                .AddScoped(p => GetProviderServices(p).CompiledQueryCacheKeyGenerator)
                 .AddScoped(p => GetProviderServices(p).EntityQueryModelVisitorFactory)
                 .AddScoped(p => GetProviderServices(p).EntityQueryableExpressionVisitorFactory)
-                .AddScoped(p => GetProviderServices(p).CompiledQueryCacheKeyGenerator)
                 .AddScoped(p => GetProviderServices(p).ExpressionPrinter)
                 .AddScoped(p => GetProviderServices(p).ResultOperatorHandler)
                 .AddScoped(p => GetProviderServices(p).ProjectionExpressionVisitorFactory);
-
         }
 
         private static IDbContextServices GetContextServices(IServiceProvider serviceProvider)

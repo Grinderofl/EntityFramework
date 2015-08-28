@@ -1,7 +1,6 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -128,23 +127,6 @@ namespace Microsoft.Data.Entity.Query
             Check.NotNull(querySource, nameof(querySource));
 
             return _querySourcesRequiringMaterialization.Contains(querySource);
-        }
-
-        private class QueryCompilationScope : IDisposable
-        {
-            private readonly IReadOnlyCollection<IDisposable> _disposables;
-            public QueryCompilationScope(params IDisposable[] disposables)
-            {
-                _disposables = disposables;
-            }
-
-            public void Dispose()
-            {
-                foreach (var disposable in _disposables)
-                {
-                    disposable.Dispose();
-                }
-            }
         }
     }
 }

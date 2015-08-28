@@ -76,8 +76,9 @@ namespace Microsoft.Data.Entity.Infrastructure
             return serviceCollection
                 .AddScoped<IMaterializerFactory, MaterializerFactory>()
                 .AddScoped<ICommandBuilderFactory, CommandBuilderFactory>()
-
-
+                .AddScoped<ICompositePredicateExpressionVisitorFactory, CompositePredicateExpressionVisitorFactory>()
+                .AddScoped<IIncludeExpressionVisitorFactory, IncludeExpressionVisitorFactory>()
+                .AddScoped<IQueryFlatteningExpressionVisitorFactory, QueryFlatteningExpressionVisitorFactory>()
 
                 .AddScoped<RelationalExpressionPrinter>()
                 .AddScoped<RelationalResultOperatorHandler>()
@@ -91,25 +92,13 @@ namespace Microsoft.Data.Entity.Infrastructure
 
 
                 // Expression Visitor Factories
-                .AddScoped<ICompositePredicateExpressionVisitorFactory, CompositePredicateExpressionVisitorFactory>()
-                .AddScoped<IIncludeExpressionVisitorFactory, IncludeExpressionVisitorFactory>()
-                .AddScoped<IQueryFlatteningExpressionVisitorFactory, QueryFlatteningExpressionVisitorFactory>()
                 .AddScoped<IShapedQueryFindingExpressionVisitorFactory, ShapedQueryFindingExpressionVisitorFactory>()
                 .AddScoped<ISqlTranslatingExpressionVisitorFactory, SqlTranslatingExpressionVisitorFactory>()
 
-
                 .AddTransient<RawSqlQueryGenerator>()
                 // Expression Visitors
-                .AddTransient<CompositePredicateExpressionVisitor>()
-                .AddTransient<IncludeExpressionVisitor>()
-                .AddTransient<QueryFlatteningExpressionVisitor>()
                 .AddTransient<ShapedQueryFindingExpressionVisitor>()
-                .AddTransient<SqlTranslatingExpressionVisitor>()
-
-
-
-                ;
-
+                .AddTransient<SqlTranslatingExpressionVisitor>();
         }
 
         private static IRelationalDatabaseProviderServices GetProviderServices(IServiceProvider serviceProvider)

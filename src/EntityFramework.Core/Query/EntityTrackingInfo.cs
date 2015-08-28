@@ -20,8 +20,7 @@ namespace Microsoft.Data.Entity.Query
             = Enumerable.Empty<IncludedEntity>();
 
         private readonly IEntityKeyFactorySource _entityKeyFactorySource;
-        private readonly IClrAccessorSource<IClrPropertyGetter> _clrAccessorSource;
-        private readonly QuerySourceReferenceExpression _querySourceReferenceExpression;
+        private readonly IClrAccessorSource<IClrPropertyGetter> _clrPropertyGetterSource;
         private readonly QueryCompilationContext _queryCompilationContext;
         private readonly IEntityType _entityType;
         private readonly IReadOnlyList<IProperty> _entityKeyProperties;
@@ -31,22 +30,22 @@ namespace Microsoft.Data.Entity.Query
 
         public EntityTrackingInfo(
             [NotNull] IEntityKeyFactorySource entityKeyFactorySource,
-            [NotNull] IClrAccessorSource<IClrPropertyGetter> clrAccessorSource,
+            [NotNull] IClrAccessorSource<IClrPropertyGetter> clrPropertyGetterSource,
             [NotNull] QueryCompilationContext queryCompilationContext,
             [NotNull] QuerySourceReferenceExpression querySourceReferenceExpression,
             [NotNull] IEntityType entityType)
         {
             Check.NotNull(entityKeyFactorySource, nameof(entityKeyFactorySource));
-            Check.NotNull(clrAccessorSource, nameof(clrAccessorSource));
+            Check.NotNull(clrPropertyGetterSource, nameof(clrPropertyGetterSource));
             Check.NotNull(querySourceReferenceExpression, nameof(querySourceReferenceExpression));
             Check.NotNull(entityType, nameof(entityType));
             Check.NotNull(queryCompilationContext, nameof(queryCompilationContext));
 
-            _querySourceReferenceExpression = querySourceReferenceExpression;
+            QuerySourceReferenceExpression = querySourceReferenceExpression;
             _entityType = entityType;
             _queryCompilationContext = queryCompilationContext;
             _entityKeyFactorySource = entityKeyFactorySource;
-            _clrAccessorSource = clrAccessorSource;
+            _clrPropertyGetterSource = clrPropertyGetterSource;
 
             _entityKeyProperties = _entityType.GetPrimaryKey().Properties;
 
@@ -79,7 +78,7 @@ namespace Microsoft.Data.Entity.Query
             }
         }
 
-        public virtual QuerySourceReferenceExpression QuerySourceReferenceExpression => _querySourceReferenceExpression;
+        public virtual QuerySourceReferenceExpression QuerySourceReferenceExpression { get; }
         public virtual IQuerySource QuerySource => QuerySourceReferenceExpression.ReferencedQuerySource;
 
         public virtual void StartTracking(
@@ -170,7 +169,7 @@ namespace Microsoft.Data.Entity.Query
 
                 if (navigation.IsCollection())
                 {
-                    var propertyGetter = _clrAccessorSource.GetAccessor(navigation);
+                    var propertyGetter = _clrPropertyGetterSource.GetAccessor(navigation);
                     var referencedEntities = (IEnumerable<object>)propertyGetter.GetClrValue(entity);
 
                     foreach (var referencedEntity
@@ -187,7 +186,7 @@ namespace Microsoft.Data.Entity.Query
                 }
                 else
                 {
-                    var propertyGetter = _clrAccessorSource.GetAccessor(navigation);
+                    var propertyGetter = _clrPropertyGetterSource.GetAccessor(navigation);
 
                     var referencedEntity = propertyGetter.GetClrValue(entity);
 

@@ -94,7 +94,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                 {
                     newExpression
                         = Expression.Call(
-                            _queryModelVisitor.QueryCompilationContext.LinqOperatorProvider.ToOrdered
+                            _queryModelVisitor.LinqOperatorProvider.ToOrdered
                                 .MakeGenericMethod(newExpression.Type.GenericTypeArguments[0]),
                             newExpression);
                 }
@@ -102,7 +102,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                 {
                     newExpression
                         = Expression.Call(
-                            _queryModelVisitor.QueryCompilationContext.LinqOperatorProvider.ToEnumerable
+                            _queryModelVisitor.LinqOperatorProvider.ToEnumerable
                                 .MakeGenericMethod(newExpression.Type.GenericTypeArguments[0]),
                             newExpression);
                 }

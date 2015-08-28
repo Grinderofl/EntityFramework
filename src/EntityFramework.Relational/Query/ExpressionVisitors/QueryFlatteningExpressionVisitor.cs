@@ -12,17 +12,17 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
 {
     public class QueryFlatteningExpressionVisitor : ExpressionVisitorBase
     {
-        private IQuerySource _outerQuerySource;
-        private IQuerySource _innerQuerySource;
-        private RelationalQueryCompilationContext _relationalQueryCompilationContext;
-        private int _readerOffset;
-        private MethodInfo _operatorToFlatten;
+        private readonly IQuerySource _outerQuerySource;
+        private readonly IQuerySource _innerQuerySource;
+        private readonly RelationalQueryCompilationContext _relationalQueryCompilationContext;
+        private readonly int _readerOffset;
+        private readonly MethodInfo _operatorToFlatten;
 
         private MethodCallExpression _outerSelectManyExpression;
         private Expression _outerShaperExpression;
         private Expression _outerCommandBuilder;
 
-        public virtual void Initialize(
+        public QueryFlatteningExpressionVisitor(
             [NotNull] IQuerySource outerQuerySource,
             [NotNull] IQuerySource innerQuerySource,
             [NotNull] RelationalQueryCompilationContext relationalQueryCompilationContext,
@@ -31,6 +31,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
         {
             Check.NotNull(outerQuerySource, nameof(outerQuerySource));
             Check.NotNull(innerQuerySource, nameof(innerQuerySource));
+            Check.NotNull(relationalQueryCompilationContext, nameof(relationalQueryCompilationContext));
             Check.NotNull(operatorToFlatten, nameof(operatorToFlatten));
 
             _outerQuerySource = outerQuerySource;

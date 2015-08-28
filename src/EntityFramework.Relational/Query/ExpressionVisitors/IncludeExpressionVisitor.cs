@@ -21,12 +21,11 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
         private readonly ICommandBuilderFactory _commandBuilderFactory;
         private readonly IRelationalMetadataExtensionProvider _relationalMetadataExtensionProvider;
         private readonly ISqlQueryGeneratorFactory _sqlQueryGeneratorFactory;
-
-        private IQuerySource _querySource;
-        private IReadOnlyList<INavigation> _navigationPath;
-        private RelationalQueryCompilationContext _queryCompilationContext;
-        private IReadOnlyList<int> _queryIndexes;
-        private bool _querySourceRequiresTracking;
+        private readonly IQuerySource _querySource;
+        private readonly IReadOnlyList<INavigation> _navigationPath;
+        private readonly RelationalQueryCompilationContext _queryCompilationContext;
+        private readonly IReadOnlyList<int> _queryIndexes;
+        private readonly bool _querySourceRequiresTracking;
 
         private bool _foundCreateEntityForQuerySource;
 
@@ -34,30 +33,26 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
             [NotNull] IMaterializerFactory materializerFactory,
             [NotNull] ICommandBuilderFactory commandBuilderFactory,
             [NotNull] IRelationalMetadataExtensionProvider relationalMetadataExtensionProvider,
-            [NotNull] ISqlQueryGeneratorFactory sqlQueryGeneratorFactory)
-        {
-            Check.NotNull(materializerFactory, nameof(materializerFactory));
-            Check.NotNull(commandBuilderFactory, nameof(commandBuilderFactory));
-            Check.NotNull(relationalMetadataExtensionProvider, nameof(relationalMetadataExtensionProvider));
-            Check.NotNull(sqlQueryGeneratorFactory, nameof(sqlQueryGeneratorFactory));
-
-            _materializerFactory = materializerFactory;
-            _commandBuilderFactory = commandBuilderFactory;
-            _relationalMetadataExtensionProvider = relationalMetadataExtensionProvider;
-            _sqlQueryGeneratorFactory = sqlQueryGeneratorFactory;
-        }
-
-        public virtual void Initialize(
+            [NotNull] ISqlQueryGeneratorFactory sqlQueryGeneratorFactory,
             [NotNull] IQuerySource querySource,
             [NotNull] IReadOnlyList<INavigation> navigationPath,
             [NotNull] RelationalQueryCompilationContext queryCompilationContext,
             [NotNull] IReadOnlyList<int> queryIndexes,
             bool querySourceRequiresTracking)
         {
+            Check.NotNull(materializerFactory, nameof(materializerFactory));
+            Check.NotNull(commandBuilderFactory, nameof(commandBuilderFactory));
+            Check.NotNull(relationalMetadataExtensionProvider, nameof(relationalMetadataExtensionProvider));
+            Check.NotNull(sqlQueryGeneratorFactory, nameof(sqlQueryGeneratorFactory));
             Check.NotNull(querySource, nameof(querySource));
             Check.NotNull(navigationPath, nameof(navigationPath));
             Check.NotNull(queryCompilationContext, nameof(queryCompilationContext));
+            Check.NotNull(queryIndexes, nameof(queryIndexes));
 
+            _materializerFactory = materializerFactory;
+            _commandBuilderFactory = commandBuilderFactory;
+            _relationalMetadataExtensionProvider = relationalMetadataExtensionProvider;
+            _sqlQueryGeneratorFactory = sqlQueryGeneratorFactory;
             _querySource = querySource;
             _navigationPath = navigationPath;
             _queryCompilationContext = queryCompilationContext;

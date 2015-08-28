@@ -43,7 +43,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                 {
                     subExpression
                         = Expression.Call(
-                            QueryModelVisitor.QueryCompilationContext.LinqOperatorProvider.ToQueryable
+                            QueryModelVisitor.LinqOperatorProvider.ToQueryable
                                 .MakeGenericMethod(resultItemType),
                             subExpression);
                 }
@@ -55,7 +55,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                     {
                         subExpression
                             = Expression.Call(
-                                QueryModelVisitor.QueryCompilationContext.LinqOperatorProvider.ToOrdered
+                                QueryModelVisitor.LinqOperatorProvider.ToOrdered
                                     .MakeGenericMethod(resultItemType),
                                 subExpression);
                     }
@@ -63,7 +63,7 @@ namespace Microsoft.Data.Entity.Query.ExpressionVisitors
                     {
                         subExpression
                             = Expression.Call(
-                                QueryModelVisitor.QueryCompilationContext.LinqOperatorProvider.ToEnumerable
+                                QueryModelVisitor.LinqOperatorProvider.ToEnumerable
                                     .MakeGenericMethod(resultItemType),
                                 subExpression);
                     }
